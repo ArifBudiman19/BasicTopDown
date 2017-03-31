@@ -10,17 +10,20 @@ public class Player : MonoBehaviour {
     public Sprite mySpriteKanan;
     public SpriteRenderer sptRndr;
 
-    public int coin;
-
-    Transform myTransform;
-    public float speed = 100;
-    Vector3 moveVector;
-    public float maxDashCooldown;
-    float dashCooldown;
-    enum direction {Atas, Bawah, Kiri, Kanan}
+    enum direction { Atas, Bawah, Kiri, Kanan }
     direction lastDir;
 
+    Transform myTransform;
+    Vector3 moveVector;
+    public int maxHealth;
+    public float speed = 100;
+    public float maxDashCooldown;
     public Rigidbody2D rigid;
+
+    // Private Atrb
+    private int coin;
+    private int health;
+    private float dashCooldown;
 
     private void Awake()
     {
@@ -32,7 +35,8 @@ public class Player : MonoBehaviour {
         myTransform = transform;
         lastDir = direction.Bawah;
         dashCooldown = maxDashCooldown;
-	}
+        health = maxHealth;
+    }
 	
 	// Update is called once per frame
 	void Update () {
@@ -60,13 +64,13 @@ public class Player : MonoBehaviour {
                 lastDir = direction.Bawah;
             }
 
-            // left rigth handling
+            // left right handling
             if(lastDir == direction.Kanan)
             {
-                myTransform.localScale = new Vector3(-5, 5, 5);
+                sptRndr.flipX = true;
             }else
             {
-                myTransform.localScale = new Vector3(5, 5, 5);
+                sptRndr.flipX = false;
             }
 
             // sprite handling
@@ -119,4 +123,43 @@ public class Player : MonoBehaviour {
             Debug.Log("DASH");
         }
     }
+
+    public int getCoins()
+    {
+        return coin;
+    }
+
+    public void addCoins(int value)
+    {
+        coin += value;
+
+        if (coin > 999) coin = 999;
+    }
+
+    public bool subtractCoins(int value)
+    {
+        if (coin - value < 0) return false;
+
+        coin -= value;
+        return true;
+    }
+
+    public int getHealth()
+    {
+        return health;
+    }
+
+    public void addHealth(int value)
+    {
+        health += value;
+
+        if (health > maxHealth) health = maxHealth;
+    }
+
+    public bool subtractHealth(int value)
+    {
+        health -= value;
+        return health <= 0;
+    }
+
 }

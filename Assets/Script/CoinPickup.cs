@@ -10,7 +10,7 @@ public class CoinPickup : MonoBehaviour {
     {
         if (collision.gameObject.CompareTag("Player"))
         {
-            collision.gameObject.GetComponent<Player>().coin += value;
+            collision.gameObject.GetComponent<Player>().addCoins(value);
             Destroy(this.gameObject);
         }
     }
