@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,6 +10,14 @@ public class Player : MonoBehaviour {
     public Sprite mySpriteKiri;
     public Sprite mySpriteKanan;
     public SpriteRenderer sptRndr;
+
+    //attack collider
+    public BoxCollider2D colAtkAtas;
+    public BoxCollider2D colAtkBawah;
+    public BoxCollider2D colAtkKiri;
+    public BoxCollider2D colAtkKanan;
+
+    bool onAttack = false;
 
     enum direction { Atas, Bawah, Kiri, Kanan }
     direction lastDir;
@@ -28,6 +37,10 @@ public class Player : MonoBehaviour {
     private void Awake()
     {
         moveVector = new Vector3(0, 0, 0);
+        colAtkAtas.enabled = false;
+        colAtkBawah.enabled = false;
+        colAtkKiri.enabled = false;
+        colAtkKanan.enabled = false;
     }
 
     // Use this for initialization
@@ -120,8 +133,42 @@ public class Player : MonoBehaviour {
                     rigid.AddForce(Vector2.right * 20, ForceMode2D.Impulse);
                     break;
             }
-            Debug.Log("DASH");
+            //Debug.Log("DASH");
         }
+
+        // Attack
+        if (Input.GetButtonDown("Fire1") && !onAttack)
+        {
+            attack();  
+        }
+    }
+
+    public void attack()
+    {
+        switch (lastDir)
+        {
+            case direction.Atas:
+                StartCoroutine(attacking(colAtkAtas)); 
+                break;
+            case direction.Bawah:
+                StartCoroutine(attacking(colAtkBawah));
+                break;
+            case direction.Kiri:
+                StartCoroutine(attacking(colAtkKiri));
+                break;
+            case direction.Kanan:
+                StartCoroutine(attacking(colAtkKanan));
+                break;
+        }
+    }
+
+    private IEnumerator attacking(BoxCollider2D collider)
+    {
+        onAttack = true;
+        collider.enabled = true;
+        yield return new WaitForSeconds(.2f);
+        collider.enabled = false;
+        onAttack = false;
     }
 
     public int getCoins()
