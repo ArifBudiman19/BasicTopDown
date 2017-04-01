@@ -55,56 +55,61 @@ public class Player : MonoBehaviour {
 	void Update () {
         float horizontalMove = (speed * Input.GetAxis("Horizontal")) * Time.deltaTime;
         float verticalMove = (speed * Input.GetAxis("Vertical")) * Time.deltaTime;
-        
+
+        // player direction
+        Vector2 myDirection = new Vector2(horizontalMove, verticalMove).normalized;
+
         moveVector = new Vector3(horizontalMove, verticalMove, 0);
+        
         // clamping moveVector speed per delta time
         moveVector = Vector3.ClampMagnitude(moveVector, (speed * Time.deltaTime));
-        if(horizontalMove == 0 ^ verticalMove == 0)
+
+        // select last direction
+        if(myDirection == Vector2.up)
         {
-            if(horizontalMove > 0)
-            {
-                lastDir = direction.Kanan;
-            }else if(horizontalMove < 0)
-            {
-                lastDir = direction.Kiri;
-            }
-            else if(verticalMove > 0)
-            {
-                lastDir = direction.Atas;
-            }
-            else if(verticalMove < 0)
-            {
-                lastDir = direction.Bawah;
-            }
-
-            // left right handling
-            if(lastDir == direction.Kanan)
-            {
-                sptRndr.flipX = true;
-            }else
-            {
-                sptRndr.flipX = false;
-            }
-
-            // sprite handling
-            switch(lastDir)
-            {
-                case direction.Atas:
-                    sptRndr.sprite = mySpriteAtas;
-                    break;
-                case direction.Bawah:
-                    sptRndr.sprite = mySpriteBawah;
-                    break;
-                case direction.Kiri:
-                    sptRndr.sprite = mySpriteKiri;
-                    break;
-                case direction.Kanan:
-                    sptRndr.sprite = mySpriteKanan;
-                    break;
-            }   
-
+            lastDir = direction.Atas;
         }
-      
+        else if (myDirection == Vector2.down)
+        {
+            lastDir = direction.Bawah;
+        }
+        else if (myDirection == Vector2.left)
+        {
+            lastDir = direction.Kiri;
+        }
+        else if (myDirection == Vector2.right)
+        {
+            lastDir = direction.Kanan;
+        }
+
+        // Flip sprite
+        switch (lastDir)
+        {
+            case direction.Kiri:
+                sptRndr.flipX = false;
+                break;
+            case direction.Kanan:
+                sptRndr.flipX = true;
+                break;
+        }
+
+        // switch sprite
+        switch (lastDir)
+        {
+            case direction.Atas:
+                sptRndr.sprite = mySpriteAtas;
+                break;
+            case direction.Bawah:
+                sptRndr.sprite = mySpriteBawah;
+                break;
+            case direction.Kiri:
+                sptRndr.sprite = mySpriteKiri;
+                break;
+            case direction.Kanan:
+                sptRndr.sprite = mySpriteKanan;
+                break;
+        }
+         
         // move player
         myTransform.Translate(moveVector);
 
