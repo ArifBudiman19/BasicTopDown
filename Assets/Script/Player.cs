@@ -18,14 +18,14 @@ public class Player : MonoBehaviour {
     public BoxCollider2D colAtkKanan;
 
     bool onAttack = false;
+    bool onDash = false;
 
     enum direction { Atas, Bawah, Kiri, Kanan }
     direction lastDir;
 
-    Transform myTransform;
-    Vector3 moveVector;
     public int maxHealth;
     public float speed = 100;
+    public float dashSpeed = 35;
     public float maxDashCooldown;
     public Rigidbody2D rigid;
 
@@ -33,10 +33,10 @@ public class Player : MonoBehaviour {
     private int coin;
     private int health;
     private float dashCooldown;
+    private Vector2 myDirection;
 
     private void Awake()
     {
-        moveVector = new Vector3(0, 0, 0);
         colAtkAtas.enabled = false;
         colAtkBawah.enabled = false;
         colAtkKiri.enabled = false;
@@ -45,7 +45,6 @@ public class Player : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
-        myTransform = transform;
         lastDir = direction.Bawah;
         dashCooldown = maxDashCooldown;
         health = maxHealth;
@@ -53,17 +52,12 @@ public class Player : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-        float horizontalMove = (speed * Input.GetAxis("Horizontal")) * Time.deltaTime;
-        float verticalMove = (speed * Input.GetAxis("Vertical")) * Time.deltaTime;
+        float horizontalMove = Input.GetAxis("Horizontal");
+        float verticalMove = Input.GetAxis("Vertical");
 
         // player direction
-        Vector2 myDirection = new Vector2(horizontalMove, verticalMove).normalized;
-
-        moveVector = new Vector3(horizontalMove, verticalMove, 0);
+        myDirection = new Vector2(horizontalMove, verticalMove).normalized;
         
-        // clamping moveVector speed per delta time
-        moveVector = Vector3.ClampMagnitude(moveVector, (speed * Time.deltaTime));
-
         // select last direction
         if(myDirection == Vector2.up)
         {
@@ -109,13 +103,13 @@ public class Player : MonoBehaviour {
                 sptRndr.sprite = mySpriteKanan;
                 break;
         }
-         
+
         // move player
-        myTransform.Translate(moveVector);
+        if(!onDash)
+            rigid.velocity = myDirection * speed;
 
 	}
-
-
+   
     void FixedUpdate()
     {
         // Dash
@@ -126,16 +120,16 @@ public class Player : MonoBehaviour {
             switch (lastDir)
             {
                 case direction.Atas:
-                    rigid.AddForce(Vector2.up * 20, ForceMode2D.Impulse);
+                    StartCoroutine(dash(Vector2.up));
                     break;
                 case direction.Bawah:
-                    rigid.AddForce(Vector2.down * 20, ForceMode2D.Impulse);
+                    StartCoroutine(dash(Vector2.down));
                     break;
                 case direction.Kiri:
-                    rigid.AddForce(Vector2.left * 20, ForceMode2D.Impulse);
+                    StartCoroutine(dash(Vector2.left));
                     break;
                 case direction.Kanan:
-                    rigid.AddForce(Vector2.right * 20, ForceMode2D.Impulse);
+                    StartCoroutine(dash(Vector2.right));
                     break;
             }
             //Debug.Log("DASH");
@@ -174,6 +168,15 @@ public class Player : MonoBehaviour {
         yield return new WaitForSeconds(.2f);
         collider.enabled = false;
         onAttack = false;
+    }
+
+    private IEnumerator dash(Vector2 dashDirection)
+    {
+        onDash = true;
+        rigid.velocity = dashDirection * dashSpeed;
+        yield return new WaitForSeconds(.5f);
+        rigid.velocity = dashDirection * speed;
+        onDash = false;
     }
 
     public int getCoins()
