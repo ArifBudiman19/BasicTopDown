@@ -19,8 +19,9 @@ public class PlayerUI : MonoBehaviour {
 	void Update () {
 
         // Coin UI manipulation
-        String tempCoins = myPlayer.getCoins().ToString();
-        if(tempCoins.Length == 1)
+        //String tempCoins = myPlayer.getCoins().ToString();
+        String tempCoins = "A";
+        if (tempCoins.Length == 1)
         {
             tempCoins = "00" + tempCoins;
         }else if(tempCoins.Length == 2)
@@ -31,6 +32,6 @@ public class PlayerUI : MonoBehaviour {
 
 
         // Health UI manipulation
-        healthTxt.text = "Health = " + myPlayer.getHealth().ToString();
+        //healthTxt.text = "Health = " + myPlayer.getHealth().ToString();
 	}
 }

@@ -4,199 +4,128 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Player : MonoBehaviour {
+    public BoxCollider2D[] collAtks;
+    Direction lastDir;
+    Rigidbody2D body;
 
-    public Sprite mySpriteAtas;
-    public Sprite mySpriteBawah;
-    public Sprite mySpriteKiri;
-    public Sprite mySpriteKanan;
-    public SpriteRenderer sptRndr;
+    public int maxHealth, maxCoin;
+    public float speed, dashSpeed, maxDashCooldown;
+    public Direction idleDir;
 
-    //attack collider
-    public BoxCollider2D colAtkAtas;
-    public BoxCollider2D colAtkBawah;
-    public BoxCollider2D colAtkKiri;
-    public BoxCollider2D colAtkKanan;
+    bool onAttack, onDash;
 
-    bool onAttack = false;
-    bool onDash = false;
-
-    enum direction { Atas, Bawah, Kiri, Kanan }
-    direction lastDir;
-
-    public int maxHealth;
-    public float speed = 100;
-    public float dashSpeed = 35;
-    public float maxDashCooldown;
-    public Rigidbody2D rigid;
-
-    // Private Atrb
-    private int coin;
-    private int health;
+    private int coin, health;
     private float dashCooldown;
-    private Vector2 myDirection;
+
 
     private void Awake()
     {
-        colAtkAtas.enabled = false;
-        colAtkBawah.enabled = false;
-        colAtkKiri.enabled = false;
-        colAtkKanan.enabled = false;
+        body = this.GetComponent<Rigidbody2D>();
+
+        foreach(BoxCollider2D col in collAtks)
+        {
+            col.enabled = false;
+        }
     }
 
-    // Use this for initialization
-    void Start () {
-        lastDir = direction.Bawah;
+    private void Start()
+    {
+        lastDir = idleDir;
         dashCooldown = maxDashCooldown;
         health = maxHealth;
     }
-	
-	// Update is called once per frame
-	void Update () {
-        float horizontalMove = Input.GetAxis("Horizontal");
-        float verticalMove = Input.GetAxis("Vertical");
 
-        // player direction
-        myDirection = new Vector2(horizontalMove, verticalMove).normalized;
-        
-        // select last direction
-        if(myDirection == Vector2.up)
-        {
-            lastDir = direction.Atas;
-        }
-        else if (myDirection == Vector2.down)
-        {
-            lastDir = direction.Bawah;
-        }
-        else if (myDirection == Vector2.left)
-        {
-            lastDir = direction.Kiri;
-        }
-        else if (myDirection == Vector2.right)
-        {
-            lastDir = direction.Kanan;
-        }
-
-        // Flip sprite
-        switch (lastDir)
-        {
-            case direction.Kiri:
-                sptRndr.flipX = false;
-                break;
-            case direction.Kanan:
-                sptRndr.flipX = true;
-                break;
-        }
-
-        // switch sprite
-        switch (lastDir)
-        {
-            case direction.Atas:
-                sptRndr.sprite = mySpriteAtas;
-                break;
-            case direction.Bawah:
-                sptRndr.sprite = mySpriteBawah;
-                break;
-            case direction.Kiri:
-                sptRndr.sprite = mySpriteKiri;
-                break;
-            case direction.Kanan:
-                sptRndr.sprite = mySpriteKanan;
-                break;
-        }
-
-        // move player
-        if(!onDash)
-            rigid.velocity = myDirection * speed;
-
-	}
-   
-    void FixedUpdate()
+    private void Update()
     {
-        // Dash
+        Vector2 direction = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical")).normalized;
+
+        if (direction == Vector2.up) { lastDir = Direction.up; }
+        else if (direction == Vector2.left) { lastDir = Direction.left; }
+        else if (direction == Vector2.right) { lastDir = Direction.right; }
+        else if (direction == Vector2.down) { lastDir = Direction.down; }
+
+        if (!onDash)
+        {
+            body.velocity = direction * speed;
+        }
+    }
+
+    private void FixedUpdate()
+    {
         dashCooldown -= Time.deltaTime;
-        if (Input.GetButtonDown("Dash") && dashCooldown < 0)
+        if(Input.GetButtonDown("Dash") && dashCooldown < 0)
         {
-            dashCooldown = maxDashCooldown;
-            switch (lastDir)
-            {
-                case direction.Atas:
-                    StartCoroutine(dash(Vector2.up));
-                    break;
-                case direction.Bawah:
-                    StartCoroutine(dash(Vector2.down));
-                    break;
-                case direction.Kiri:
-                    StartCoroutine(dash(Vector2.left));
-                    break;
-                case direction.Kanan:
-                    StartCoroutine(dash(Vector2.right));
-                    break;
-            }
-            //Debug.Log("DASH");
+            Dash();
         }
 
-        // Attack
-        if (Input.GetButtonDown("Fire1") && !onAttack)
+        if(Input.GetButtonDown("Attack") && !onAttack)
         {
-            attack();  
+            Attack();
         }
+
+        float rax = Input.GetAxis("Attack");
+
+        Debug.Log("RAX " + rax);
     }
 
-    public void attack()
+    private void Attack()
     {
         switch (lastDir)
         {
-            case direction.Atas:
-                StartCoroutine(attacking(colAtkAtas)); 
+            case Direction.up:
+                StartCoroutine(Attacking(Vector2.up));
                 break;
-            case direction.Bawah:
-                StartCoroutine(attacking(colAtkBawah));
+            case Direction.left:
+                StartCoroutine(Attacking(Vector2.left));
                 break;
-            case direction.Kiri:
-                StartCoroutine(attacking(colAtkKiri));
+            case Direction.right:
+                StartCoroutine(Attacking(Vector2.right));
                 break;
-            case direction.Kanan:
-                StartCoroutine(attacking(colAtkKanan));
+            case Direction.down:
+                StartCoroutine(Attacking(Vector2.down));
                 break;
         }
     }
 
-    private IEnumerator attacking(BoxCollider2D collider)
+    private IEnumerator Attacking(Vector2 vectorDir)
     {
+        BoxCollider2D collider = collAtks[(int)lastDir];
         onAttack = true;
         collider.enabled = true;
+        collider.transform.localPosition = new Vector2(vectorDir.x * .17f, vectorDir.y * .2f);
         yield return new WaitForSeconds(.2f);
+        collider.transform.localPosition = new Vector2(0,0);
         collider.enabled = false;
         onAttack = false;
     }
 
-    private IEnumerator dash(Vector2 dashDirection)
+    private void Dash()
+    {
+        dashCooldown = maxDashCooldown;
+        switch (lastDir)
+        {
+            case Direction.up:
+                StartCoroutine(Dashing(Vector2.up));
+                break;
+            case Direction.left:
+                StartCoroutine(Dashing(Vector2.left));
+                break;
+            case Direction.right:
+                StartCoroutine(Dashing(Vector2.right));
+                break;
+            case Direction.down:
+                StartCoroutine(Dashing(Vector2.down));
+                break;
+        }
+    }
+    
+    private IEnumerator Dashing(Vector2 vectorDir)
     {
         onDash = true;
-        rigid.velocity = dashDirection * dashSpeed;
+        body.velocity = vectorDir * dashSpeed;
         yield return new WaitForSeconds(.5f);
-        rigid.velocity = dashDirection * speed;
+        body.velocity = vectorDir * speed;
         onDash = false;
-    }
-
-    public int getCoins()
-    {
-        return coin;
-    }
-
-    public void addCoins(int value)
-    {
-        coin += value;
-
-        if (coin > 999) coin = 999;
-    }
-
-    public bool subtractCoins(int value)
-    {
-        if (coin - value < 0) return false;
-
-        coin -= value;
-        return true;
     }
 
     public int getHealth()
@@ -217,4 +146,23 @@ public class Player : MonoBehaviour {
         return health <= 0;
     }
 
+    public int getCoins()
+    {
+        return coin;
+    }
+
+    public void addCoins(int value)
+    {
+        coin += value;
+
+        if (coin > maxCoin) coin = maxCoin;
+    }
+
+    public bool subtractCoins(int value)
+    {
+        if (coin - value < 0) return false;
+
+        coin -= value;
+        return true;
+    }
 }
