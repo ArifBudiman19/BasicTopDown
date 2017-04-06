@@ -9,13 +9,13 @@ public class Player : MonoBehaviour {
     Rigidbody2D body;
 
     public int maxHealth, maxCoin;
-    public float speed, dashSpeed, maxDashCooldown;
+    public float speed, dashSpeed, maxDashCooldown, maxAttackCooldown;
     public Direction idleDir;
 
     bool onAttack, onDash;
 
     private int coin, health;
-    private float dashCooldown;
+    private float dashCooldown, attackCooldown;
 
 
     private void Awake()
@@ -32,6 +32,7 @@ public class Player : MonoBehaviour {
     {
         lastDir = idleDir;
         dashCooldown = maxDashCooldown;
+        attackCooldown = maxAttackCooldown;
         health = maxHealth;
     }
 
@@ -52,24 +53,23 @@ public class Player : MonoBehaviour {
 
     private void FixedUpdate()
     {
-        dashCooldown -= Time.deltaTime;
+        dashCooldown -= Time.fixedDeltaTime;
         if(Input.GetButtonDown("Dash") && dashCooldown < 0)
         {
             Dash();
         }
 
-        if(Input.GetButtonDown("Attack") && !onAttack)
+        attackCooldown -= Time.fixedDeltaTime;
+        if ((Input.GetAxis("Attack") > 0) && !onAttack && attackCooldown < 0)
         {
             Attack();
         }
-
-        float rax = Input.GetAxis("Attack");
-
-        Debug.Log("RAX " + rax);
+        
     }
 
     private void Attack()
     {
+        attackCooldown = maxAttackCooldown;
         switch (lastDir)
         {
             case Direction.up:
